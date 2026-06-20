@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
   ScoreBadge,
-  StatusBadge,
   WebsiteStatusBadge,
   ConfidenceBadge,
 } from "@/components/Badges";
@@ -73,15 +72,16 @@ export default async function LeadPage({
               )}
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <StatusBadge status={lead.status} />
               <ScoreBadge score={a?.lead_score ?? null} />
               {a ? <WebsiteStatusBadge status={a.website_status} /> : null}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <StatusControl leadId={lead.id} status={lead.status} />
-            <DeleteLeadButton leadId={lead.id} />
-          </div>
+          <DeleteLeadButton leadId={lead.id} />
+        </div>
+
+        {/* Status pills — full width row */}
+        <div className="mt-5 border-t border-slate-100 pt-5">
+          <StatusControl leadId={lead.id} status={lead.status} />
         </div>
 
         {/* Safety note */}
