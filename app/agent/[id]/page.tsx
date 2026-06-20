@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ChevronLeft, Lock, Rocket } from "lucide-react";
+import { Lock, Rocket } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 import { getCampaignWithPairs, listLeadsByIds, getCampaignLeadIds } from "@/lib/repo";
 import { CampaignRunner } from "@/components/CampaignRunner";
 import { CampaignSummary } from "@/components/CampaignSummary";
@@ -25,13 +25,7 @@ export default async function CampaignDetailPage({
   return (
     <div className="space-y-6">
       {/* Back nav */}
-      <Link
-        href="/agent"
-        className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        All campaigns
-      </Link>
+      <BackButton label="All campaigns" fallbackHref="/agent" />
 
       {/* Header */}
       <div className="flex items-start gap-4">

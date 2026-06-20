@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Lock, Phone, Mail, Globe, Camera, Link2, MapPin, Tag } from "lucide-react";
+import { Lock, Phone, Mail, Globe, Camera, Link2, MapPin, Tag } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 import { getLeadWithDetails, getSettings } from "@/lib/repo";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -37,13 +37,7 @@ export default async function LeadPage({
   return (
     <div className="space-y-6">
       {/* Back nav */}
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Back to dashboard
-      </Link>
+      <BackButton label="Back to dashboard" fallbackHref="/dashboard" />
 
       {/* Header card */}
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
