@@ -145,6 +145,7 @@ CREATE TABLE IF NOT EXISTS settings (
   id                   TEXT PRIMARY KEY,
   my_name              TEXT NOT NULL DEFAULT '',
   service_description  TEXT NOT NULL DEFAULT '',
+  market               TEXT NOT NULL DEFAULT 'Georgia',
   preferred_cities     TEXT NOT NULL DEFAULT '[]',
   preferred_categories TEXT NOT NULL DEFAULT '[]',
   default_price_min_gel INTEGER NOT NULL DEFAULT 800,
@@ -164,14 +165,15 @@ function seedSettings(db: SQLiteDB): void {
   const row = db.prepare("SELECT id FROM settings WHERE id = ?").get(SETTINGS_ID);
   if (row) return;
   db.prepare(`
-    INSERT INTO settings (id, my_name, service_description, preferred_cities,
+    INSERT INTO settings (id, my_name, service_description, market, preferred_cities,
       preferred_categories, default_price_min_gel, default_price_max_gel,
       tone, default_language, signature, contact_phone, contact_email, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     SETTINGS_ID,
     "Beso Surmava",
-    "I design and build fast, modern websites for hotels, cottages, cafes, restaurants, car washes, beauty salons and tourism businesses in Georgia. Mobile-friendly, multilingual (EN/KA/RU), with booking and contact forms.",
+    "I design and build fast, modern websites for hotels, cottages, cafes, restaurants, car washes, beauty salons and tourism businesses. Mobile-friendly, with booking and contact forms.",
+    "Georgia",
     JSON.stringify(["Kutaisi", "Batumi", "Tbilisi"]),
     JSON.stringify(["Hotel", "Guesthouse", "Cottage / Villa", "Cafe", "Restaurant"]),
     800, 2500,
@@ -191,6 +193,7 @@ const COLUMN_MIGRATIONS = [
   `ALTER TABLE campaigns ADD COLUMN total_skipped_duplicate INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE campaigns ADD COLUMN total_skipped_below_score INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE campaigns ADD COLUMN total_skipped_has_website INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE settings ADD COLUMN market TEXT NOT NULL DEFAULT 'Georgia'`,
 ];
 
 function runMigrations(db: SQLiteDB): void {

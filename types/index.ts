@@ -57,6 +57,8 @@ export type AgentRunStatus = "running" | "completed" | "failed";
 
 export type OutreachTone = "friendly" | "professional" | "direct" | "warm";
 
+export type Market = "Georgia" | "USA";
+
 // ---------------------------------------------------------------------------
 // Table row types
 // ---------------------------------------------------------------------------
@@ -131,6 +133,7 @@ export interface Settings {
   id: string;
   my_name: string;
   service_description: string;
+  market: Market;
   preferred_cities: string[];
   preferred_categories: string[];
   default_price_min_gel: number;

@@ -1,5 +1,5 @@
 /**
- * Tool: searchBusinesses(query, city, category)
+ * Tool: searchBusinesses(query, city, category, maxResults, market)
  *
  * Pluggable business discovery:
  *  - If GOOGLE_PLACES_API_KEY is set, queries the Google Places API (New) and
@@ -9,6 +9,7 @@
  */
 
 import "server-only";
+import { marketConfig, type Market } from "@/lib/constants";
 import type { LeadSource } from "@/types";
 
 export interface BusinessCandidate {
@@ -33,9 +34,10 @@ export async function searchBusinesses(
   city: string,
   category: string,
   maxResults = 8,
+  market: Market = "Georgia",
 ): Promise<BusinessCandidate[]> {
   if (placesKey) {
-    return searchGooglePlaces(query, city, category, maxResults);
+    return searchGooglePlaces(query, city, category, maxResults, market);
   }
   return demoCandidates(city, category, maxResults);
 }
@@ -56,8 +58,11 @@ async function searchGooglePlaces(
   city: string,
   category: string,
   maxResults: number,
+  market: Market,
 ): Promise<BusinessCandidate[]> {
-  const textQuery = `${query || category} in ${city}, Georgia`;
+  const cfg = marketConfig(market);
+  // cfg.querySuffix disambiguates Georgia (country) from the US state of Georgia.
+  const textQuery = `${query || category} in ${city}${cfg.querySuffix}`;
   const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
     headers: {
@@ -69,7 +74,7 @@ async function searchGooglePlaces(
     body: JSON.stringify({
       textQuery,
       maxResultCount: Math.min(maxResults, 20),
-      regionCode: "GE",
+      regionCode: cfg.regionCode,
     }),
   });
 

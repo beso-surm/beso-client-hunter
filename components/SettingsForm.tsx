@@ -6,7 +6,7 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, Select, Textarea } from "@/components/ui/Field";
 import { Spinner } from "@/components/ui/Spinner";
-import { CITIES, CATEGORIES, LANGUAGES, TONES } from "@/lib/constants";
+import { CITIES, US_CITIES, CATEGORIES, LANGUAGES, TONES, MARKETS, marketConfig, type Market } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { saveSettingsAction } from "@/app/actions/settings";
 import type { MessageLanguage, OutreachTone, Settings } from "@/types";
@@ -16,6 +16,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
   const [form, setForm] = useState({
     my_name: initial.my_name,
     service_description: initial.service_description,
+    market: initial.market,
     preferred_cities: initial.preferred_cities,
     preferred_categories: initial.preferred_categories,
     default_price_min_gel: initial.default_price_min_gel,
@@ -26,6 +27,8 @@ export function SettingsForm({ initial }: { initial: Settings }) {
     contact_phone: initial.contact_phone ?? "",
     contact_email: initial.contact_email ?? "",
   });
+  const cityList = form.market === "USA" ? US_CITIES : CITIES;
+  const currency = marketConfig(form.market as Market).currency;
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(
     null,
@@ -90,6 +93,33 @@ export function SettingsForm({ initial }: { initial: Settings }) {
 
       <Card>
         <CardHeader
+          title="Market"
+          description="Which country you're hunting clients in. Controls cities, currency, and AI prompts."
+        />
+        <div className="px-5 py-4">
+          <div className="flex gap-2">
+            {MARKETS.map((m) => (
+              <Chip
+                key={m.value}
+                active={form.market === m.value}
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    market: m.value as Market,
+                    preferred_cities: [],
+                    default_language: m.defaultLanguage,
+                  }))
+                }
+              >
+                {m.label}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
           title="Targeting"
           description="Default cities and categories the agent should focus on."
         />
@@ -97,7 +127,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
           <div>
             <Label>Preferred cities</Label>
             <div className="flex flex-wrap gap-2">
-              {CITIES.map((c) => (
+              {cityList.map((c) => (
                 <Chip
                   key={c}
                   active={form.preferred_cities.includes(c)}
@@ -132,7 +162,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
         />
         <div className="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
           <div>
-            <Label htmlFor="min">Default price min (GEL)</Label>
+            <Label htmlFor="min">Default price min ({currency})</Label>
             <Input
               id="min"
               type="number"
@@ -147,7 +177,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
             />
           </div>
           <div>
-            <Label htmlFor="max">Default price max (GEL)</Label>
+            <Label htmlFor="max">Default price max ({currency})</Label>
             <Input
               id="max"
               type="number"

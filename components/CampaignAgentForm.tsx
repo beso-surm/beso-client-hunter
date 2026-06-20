@@ -2,12 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Rocket, ChevronDown } from "lucide-react";
+import { Rocket } from "lucide-react";
 import {
   CAMPAIGN_CITIES,
+  US_CAMPAIGN_CITIES,
   CAMPAIGN_CATEGORIES,
   DEFAULT_CAMPAIGN_CITIES,
   DEFAULT_CAMPAIGN_CATEGORIES,
+  DEFAULT_US_CAMPAIGN_CITIES,
+  DEFAULT_US_CAMPAIGN_CATEGORIES,
+  MARKETS,
+  type Market,
 } from "@/lib/constants";
 import { createCampaignAction } from "@/app/actions/campaign-agent";
 import { cn } from "@/lib/utils";
@@ -19,8 +24,16 @@ export function CampaignAgentForm() {
     const d = new Date();
     return `Campaign ${d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`;
   });
+  const [market, setMarket] = useState<Market>("Georgia");
+  const campaignCityList = market === "USA" ? US_CAMPAIGN_CITIES : CAMPAIGN_CITIES;
   const [cities, setCities] = useState<string[]>(DEFAULT_CAMPAIGN_CITIES);
   const [categories, setCategories] = useState<string[]>(DEFAULT_CAMPAIGN_CATEGORIES);
+
+  function switchMarket(m: Market) {
+    setMarket(m);
+    setCities(m === "USA" ? [...DEFAULT_US_CAMPAIGN_CITIES] : [...DEFAULT_CAMPAIGN_CITIES]);
+    setCategories(m === "USA" ? [...DEFAULT_US_CAMPAIGN_CATEGORIES] : [...DEFAULT_CAMPAIGN_CATEGORIES]);
+  }
   const [maxPerPair, setMaxPerPair] = useState(8);
   const [minScore, setMinScore] = useState(0);
   const [skipWithWebsite, setSkipWithWebsite] = useState(false);
@@ -75,6 +88,28 @@ export function CampaignAgentForm() {
         />
       </div>
 
+      {/* Market */}
+      <div>
+        <label className="mb-2 block text-sm font-medium text-slate-700">Market</label>
+        <div className="flex gap-2">
+          {MARKETS.map((m) => (
+            <button
+              key={m.value}
+              type="button"
+              onClick={() => switchMarket(m.value)}
+              className={cn(
+                "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                market === m.value
+                  ? "border-indigo-600 bg-indigo-600 text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-600",
+              )}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Cities */}
       <div>
         <div className="mb-2 flex items-center justify-between">
@@ -84,7 +119,7 @@ export function CampaignAgentForm() {
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => setCities([...CAMPAIGN_CITIES])}
+              onClick={() => setCities([...campaignCityList])}
               className="text-xs text-indigo-600 hover:underline"
             >
               All
@@ -100,7 +135,7 @@ export function CampaignAgentForm() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {CAMPAIGN_CITIES.map((city) => (
+          {campaignCityList.map((city) => (
             <button
               key={city}
               type="button"

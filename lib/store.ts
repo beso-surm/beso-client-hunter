@@ -32,7 +32,8 @@ function defaultSettings(): Settings {
     id: FIXED_SETTINGS_ID,
     my_name: "Beso Surmava",
     service_description:
-      "I design and build fast, modern websites for hotels, cottages, cafes, restaurants, car washes, beauty salons and tourism businesses in Georgia. Mobile-friendly, multilingual (EN/KA/RU), with booking and contact forms.",
+      "I design and build fast, modern websites for hotels, cottages, cafes, restaurants, car washes, beauty salons and tourism businesses. Mobile-friendly, with booking and contact forms.",
+    market: "Georgia",
     preferred_cities: ["Kutaisi", "Batumi", "Tbilisi"],
     preferred_categories: ["Hotel", "Guesthouse", "Cottage / Villa", "Cafe", "Restaurant"],
     default_price_min_gel: 800,

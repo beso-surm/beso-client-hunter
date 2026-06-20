@@ -1,5 +1,6 @@
 /** Prompt builder for the business-analysis step. */
 
+import { marketConfig } from "@/lib/constants";
 import type { Settings } from "@/types";
 import type { WebsiteData } from "@/agents/tools/checkWebsite";
 
@@ -21,9 +22,15 @@ export function buildAnalysisPrompt(input: AnalysisPromptInput): {
   user: string;
 } {
   const { settings } = input;
+  const cfg = marketConfig(settings.market);
+  const currency = cfg.currency;
+  const marketNote =
+    settings.market === "USA"
+      ? "Think about the US local market: many small businesses have outdated or no websites, rely only on social media, and lose customers who search on Google."
+      : "Think about the Georgian market: many small hospitality/tourism businesses rely only on Instagram or booking.com and lose direct customers.";
 
   const system = [
-    `You are a lead-qualification analyst for ${settings.my_name}, a freelance web developer in Georgia (the country).`,
+    `You are a lead-qualification analyst for ${settings.my_name}, a freelance web developer.`,
     `${settings.my_name}'s service: ${settings.service_description}`,
     "",
     "Your job: assess one local business as a potential website client and return a strict JSON object.",
@@ -31,9 +38,9 @@ export function buildAnalysisPrompt(input: AnalysisPromptInput): {
     "Rules:",
     "- Base every conclusion ONLY on the facts provided. Do not invent contact details, traffic numbers, or claims you cannot support.",
     "- If something is unknown, say so and lower your confidence rather than guessing.",
-    "- Think about the Georgian market: many small hospitality/tourism businesses rely only on Instagram or booking.com and lose direct customers.",
+    marketNote,
     "- Be concrete and practical. Problems and strengths should be specific to THIS business.",
-    `- Suggest a price range in GEL within ${settings.my_name}'s normal band (${settings.default_price_min_gel}–${settings.default_price_max_gel} GEL), adjusted for the apparent size of the business.`,
+    `- Suggest a price range in ${currency} within ${settings.my_name}'s normal band (${settings.default_price_min_gel}–${settings.default_price_max_gel} ${currency}), adjusted for the apparent size of the business.`,
     "",
     "Respond with ONLY a single JSON object, no markdown, matching exactly:",
     "{",
@@ -41,7 +48,7 @@ export function buildAnalysisPrompt(input: AnalysisPromptInput): {
     '  "problems_found": string[],            // 2–6 concrete problems with their current web presence',
     '  "business_strengths": string[],        // 1–4 things they do well that a site could amplify',
     '  "why_they_need_website": string,       // 1–3 sentences, persuasive but honest',
-    '  "suggested_price_range_gel": string,   // e.g. "1000–1800 GEL"',
+    `  "suggested_price_range_gel": string,   // e.g. "1000–1800 ${currency}"`,
     '  "best_outreach_angle": string,         // the single most compelling hook for the first message',
     '  "confidence": "low" | "medium" | "high"',
     "}",

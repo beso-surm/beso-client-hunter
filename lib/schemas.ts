@@ -100,6 +100,7 @@ export type RunAgentInput = z.input<typeof runAgentSchema>;
 export const settingsSchema = z.object({
   my_name: z.string().trim().min(1).max(120),
   service_description: z.string().trim().min(1).max(1200),
+  market: z.enum(["Georgia", "USA"]).default("Georgia"),
   preferred_cities: z.array(z.string()).default([]),
   preferred_categories: z.array(z.string()).default([]),
   default_price_min_gel: z.coerce.number().int().min(0).max(100000),

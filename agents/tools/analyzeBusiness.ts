@@ -8,6 +8,7 @@
 
 import "server-only";
 import { claudeEnabled, generateJSON } from "@/lib/claude";
+import { marketConfig } from "@/lib/constants";
 import { analysisAISchema, type AnalysisAI } from "@/lib/schemas";
 import { buildAnalysisPrompt } from "@/agents/prompts/analyze";
 import type { WebsiteData } from "@/agents/tools/checkWebsite";
@@ -76,9 +77,11 @@ function heuristicAnalysis(
   website: WebsiteData,
   settings: Settings,
 ): AnalysisAI {
+  const cfg = marketConfig(settings.market);
+  const currency = cfg.currency;
   const status = deriveStatus(lead, website);
   const cat = (lead.category ?? "business").toLowerCase();
-  const city = lead.city ?? "Georgia";
+  const city = lead.city ?? settings.market;
 
   const problemsByStatus: Record<WebsiteStatus, string[]> = {
     none: [
@@ -117,7 +120,7 @@ function heuristicAnalysis(
     problems_found: problemsByStatus[status],
     business_strengths: strengths,
     why_they_need_website: `A modern, mobile-friendly website would help this ${cat} in ${city} get found on Google, present its offering clearly, and capture direct enquiries instead of losing them to competitors and platforms.`,
-    suggested_price_range_gel: `${settings.default_price_min_gel}–${settings.default_price_max_gel} GEL`,
+    suggested_price_range_gel: `${settings.default_price_min_gel}–${settings.default_price_max_gel} ${currency}`,
     best_outreach_angle:
       status === "none" || status === "social_only"
         ? "They have no real website yet — lead with how a simple site captures customers who search on Google."

@@ -77,7 +77,7 @@ export async function runClientHunterAgent(
   try {
     const settings = await getSettings();
     const query = `${category} in ${city}`;
-    const candidates = await searchBusinesses(query, city, category, maxResults);
+    const candidates = await searchBusinesses(query, city, category, maxResults, settings.market);
     totalFound = candidates.length;
 
     for (const candidate of candidates) {

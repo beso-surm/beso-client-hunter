@@ -125,6 +125,7 @@ function rowToSettings(r: Record<string, unknown>): Settings {
     id: r.id as string,
     my_name: (r.my_name as string) ?? "",
     service_description: (r.service_description as string) ?? "",
+    market: ((r.market as string) ?? "Georgia") as Settings["market"],
     preferred_cities: arr(r.preferred_cities),
     preferred_categories: arr(r.preferred_categories),
     default_price_min_gel: r.default_price_min_gel as number,

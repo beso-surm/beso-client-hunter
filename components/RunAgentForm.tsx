@@ -5,26 +5,37 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Label, Select, Input, FieldError } from "@/components/ui/Field";
 import { Spinner } from "@/components/ui/Spinner";
-import { CITIES, CATEGORIES } from "@/lib/constants";
+import { CITIES, US_CITIES, CATEGORIES, MARKETS, type Market } from "@/lib/constants";
 import { runAgentAction } from "@/app/actions/agent";
+import { cn } from "@/lib/utils";
 import type { AgentRunSummary } from "@/types";
 
 export function RunAgentForm({
   defaultCity,
   defaultCategory,
+  defaultMarket = "Georgia",
   onDone,
 }: {
   defaultCity?: string;
   defaultCategory?: string;
+  defaultMarket?: Market;
   onDone?: () => void;
 }) {
   const router = useRouter();
-  const [city, setCity] = useState(defaultCity ?? CITIES[0]);
+  const [market, setMarket] = useState<Market>(defaultMarket);
+  const cityList = market === "USA" ? US_CITIES : CITIES;
+  const [city, setCity] = useState(defaultCity ?? cityList[0]);
   const [category, setCategory] = useState(defaultCategory ?? CATEGORIES[0]);
   const [maxResults, setMaxResults] = useState(8);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<AgentRunSummary | null>(null);
+
+  function switchMarket(m: Market) {
+    setMarket(m);
+    const list = m === "USA" ? US_CITIES : CITIES;
+    setCity(list[0]);
+  }
 
   async function run() {
     setLoading(true);
@@ -61,7 +72,7 @@ export function RunAgentForm({
           </ul>
         </div>
         <p className="text-xs text-slate-500">
-          Every lead got a draft outreach message marked “ready for review”.
+          Every lead got a draft outreach message marked "ready for review".
           Nothing was sent.
         </p>
         <div className="flex justify-end gap-2">
@@ -78,9 +89,31 @@ export function RunAgentForm({
     <div className="space-y-4">
       <p className="text-sm text-slate-500">
         The agent searches for businesses, checks their web presence, analyzes
-        and scores them, and drafts a Georgian outreach message for each — all
-        for your review. It never contacts anyone.
+        and scores them, and drafts an outreach message for each — all for your
+        review. It never contacts anyone.
       </p>
+
+      {/* Market toggle */}
+      <div>
+        <Label>Market</Label>
+        <div className="flex gap-2">
+          {MARKETS.map((m) => (
+            <button
+              key={m.value}
+              type="button"
+              onClick={() => switchMarket(m.value)}
+              className={cn(
+                "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                market === m.value
+                  ? "border-indigo-600 bg-indigo-600 text-white"
+                  : "border-slate-300 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-600",
+              )}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -90,7 +123,7 @@ export function RunAgentForm({
             value={city}
             onChange={(e) => setCity(e.target.value)}
           >
-            {CITIES.map((c) => (
+            {cityList.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
