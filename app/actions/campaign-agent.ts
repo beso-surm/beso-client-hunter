@@ -15,11 +15,12 @@ import {
 import { runClientHunterAgent } from "@/agents/runClientHunterAgent";
 import { ok, fail } from "@/lib/action-result";
 import type { ActionResult } from "@/lib/action-result";
-import type { Campaign, CampaignWithPairs, LeadStatus } from "@/types";
+import type { Campaign, CampaignWithPairs, LeadStatus, Market } from "@/types";
 import { nowISO } from "@/lib/utils";
 
 export async function createCampaignAction(input: {
   name: string;
+  market?: Market;
   cities: string[];
   categories: string[];
   max_per_pair?: number;
@@ -37,6 +38,7 @@ export async function createCampaignAction(input: {
 
     const campaign = await createCampaign({
       name: input.name.trim(),
+      market: input.market ?? "Georgia",
       cities: input.cities,
       categories: input.categories,
       max_per_pair: input.max_per_pair ?? 8,
@@ -84,6 +86,7 @@ export async function runCampaignPairAction(
       minScore: cwp.min_score > 0 ? cwp.min_score : undefined,
       skipWithWebsite: cwp.skip_with_website,
       skipAgentRun: true,
+      market: cwp.market,
     });
 
     const found = result.totalFound;

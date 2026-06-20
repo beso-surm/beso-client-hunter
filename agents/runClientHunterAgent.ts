@@ -41,7 +41,7 @@ import { writeGeorgianOutreach } from "@/agents/tools/writeGeorgianOutreach";
 import { saveLead } from "@/agents/tools/saveLead";
 import { saveAnalysis } from "@/agents/tools/saveAnalysis";
 import { saveGeneratedMessage } from "@/agents/tools/saveGeneratedMessage";
-import type { AgentRunSummary } from "@/types";
+import type { AgentRunSummary, Market } from "@/types";
 
 export interface RunClientHunterArgs {
   city: string;
@@ -51,6 +51,7 @@ export interface RunClientHunterArgs {
   minScore?: number;
   skipWithWebsite?: boolean;
   skipAgentRun?: boolean;
+  market?: Market;
 }
 
 export async function runClientHunterAgent(
@@ -76,8 +77,9 @@ export async function runClientHunterAgent(
 
   try {
     const settings = await getSettings();
+    const effectiveSettings = args.market ? { ...settings, market: args.market } : settings;
     const query = `${category} in ${city}`;
-    const candidates = await searchBusinesses(query, city, category, maxResults, settings.market);
+    const candidates = await searchBusinesses(query, city, category, maxResults, effectiveSettings.market);
     totalFound = candidates.length;
 
     for (const candidate of candidates) {
@@ -108,7 +110,7 @@ export async function runClientHunterAgent(
             email: candidate.email,
           },
           website,
-          settings,
+          effectiveSettings,
         );
 
         const score = scoreLead(analysis, {
@@ -144,7 +146,7 @@ export async function runClientHunterAgent(
             city: lead.city,
           },
           savedAnalysis,
-          settings,
+          effectiveSettings,
         );
 
         await saveGeneratedMessage({

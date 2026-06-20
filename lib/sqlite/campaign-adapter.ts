@@ -6,6 +6,7 @@ import type {
   CampaignPair,
   CampaignStatus,
   CampaignWithPairs,
+  Market,
 } from "@/types";
 
 function db() {
@@ -18,7 +19,7 @@ function rowToCampaign(r: Record<string, unknown>): Campaign {
   return {
     id: r.id as string,
     name: r.name as string,
-    country: r.country as string,
+    market: ((r.country as string) ?? "Georgia") as Market,
     cities: JSON.parse(r.cities as string),
     categories: JSON.parse(r.categories as string),
     max_per_pair: r.max_per_pair as number,
@@ -62,7 +63,7 @@ function rowToPair(r: Record<string, unknown>): CampaignPair {
 
 export interface CreateCampaignData {
   name: string;
-  country?: string;
+  market?: Market;
   cities: string[];
   categories: string[];
   max_per_pair?: number;
@@ -89,7 +90,7 @@ export function createCampaign(input: CreateCampaignData): Campaign {
   `).run(
     id,
     input.name,
-    input.country ?? "Georgia",
+    input.market ?? "Georgia",
     JSON.stringify(cities),
     JSON.stringify(categories),
     input.max_per_pair ?? 8,

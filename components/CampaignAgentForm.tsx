@@ -59,6 +59,7 @@ export function CampaignAgentForm() {
     startTransition(async () => {
       const res = await createCampaignAction({
         name,
+        market,
         cities,
         categories,
         max_per_pair: maxPerPair,
@@ -248,8 +249,8 @@ export function CampaignAgentForm() {
               />
               <div
                 className={cn(
-                  "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
-                  skipWithWebsite ? "left-4.5 translate-x-0" : "left-0.5",
+                  "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
+                  skipWithWebsite ? "translate-x-4" : "translate-x-0",
                 )}
               />
             </div>

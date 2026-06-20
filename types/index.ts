@@ -190,7 +190,7 @@ export type CampaignStatus = "pending" | "running" | "completed" | "failed";
 export interface Campaign {
   id: string;
   name: string;
-  country: string;
+  market: Market;
   cities: string[];
   categories: string[];
   max_per_pair: number;
