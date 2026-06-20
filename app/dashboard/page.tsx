@@ -42,6 +42,7 @@ export default async function DashboardPage({
       ? (marketParam as Market)
       : null;
 
+  const LEAD_LIMIT = 120;
   const filters: LeadFilters = {
     q: one(sp.q) ?? null,
     city: one(sp.city) ?? null,
@@ -49,6 +50,7 @@ export default async function DashboardPage({
     status: validStatus,
     minScore: minScoreParam ? Number(minScoreParam) : null,
     market: validMarket,
+    limit: LEAD_LIMIT,
   };
 
   const [leads, stats, runs, settings] = await Promise.all([
@@ -140,11 +142,19 @@ export default async function DashboardPage({
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {leads.map((lead) => (
-            <LeadCard key={lead.id} lead={lead} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {leads.map((lead) => (
+              <LeadCard key={lead.id} lead={lead} />
+            ))}
+          </div>
+          {leads.length === LEAD_LIMIT && (
+            <p className="text-center text-sm text-slate-400">
+              Showing top {LEAD_LIMIT} leads by score.{" "}
+              <span className="text-slate-500">Use filters to narrow results.</span>
+            </p>
+          )}
+        </>
       )}
 
       {/* Recent agent runs */}

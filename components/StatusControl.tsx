@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { LEAD_STATUSES } from "@/lib/constants";
@@ -39,39 +39,43 @@ export function StatusControl({
 }) {
   const router = useRouter();
   const [current, setCurrent] = useState<LeadStatus>(status);
-  const [loading, setLoading] = useState<LeadStatus | null>(null);
+  const [saving, setSaving] = useState<LeadStatus | null>(null);
+  const [, startTransition] = useTransition();
 
   async function change(next: LeadStatus) {
-    if (next === current || loading) return;
-    setLoading(next);
-    await updateLeadStatusAction({ id: leadId, status: next });
-    setCurrent(next);
-    setLoading(null);
-    router.refresh();
+    if (next === current || saving) return;
+    const prev = current;
+    setCurrent(next);   // optimistic — UI responds instantly
+    setSaving(next);
+    const res = await updateLeadStatusAction({ id: leadId, status: next });
+    setSaving(null);
+    if (res && !res.ok) setCurrent(prev);  // revert on failure
+    // Refresh in the background — doesn't block interaction
+    startTransition(() => router.refresh());
   }
 
   return (
     <div>
-      <p className="mb-2 text-xs font-medium text-slate-400 uppercase tracking-wide">
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
         Status
       </p>
       <div className="flex flex-wrap gap-2">
         {LEAD_STATUSES.map((s) => {
           const isActive = s.value === current;
-          const isLoading = loading === s.value;
+          const isSaving = saving === s.value;
           const colors = PILL_COLORS[s.value];
           return (
             <button
               key={s.value}
               type="button"
               onClick={() => change(s.value)}
-              disabled={!!loading}
+              disabled={!!saving}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60",
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed",
                 isActive ? colors.active : cn("bg-white", colors.inactive),
               )}
             >
-              {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+              {isSaving && <Loader2 className="h-3 w-3 animate-spin" />}
               {SHORT_LABELS[s.value]}
             </button>
           );

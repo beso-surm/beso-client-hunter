@@ -186,6 +186,7 @@ function seedSettings(db: SQLiteDB): void {
 
 // Idempotent column migrations for DBs created before a schema change.
 // SQLite errors if a column already exists; we ignore those errors.
+// CREATE INDEX IF NOT EXISTS is always safe to re-run.
 const COLUMN_MIGRATIONS = [
   `ALTER TABLE campaign_pairs ADD COLUMN skipped_duplicate INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE campaign_pairs ADD COLUMN skipped_below_score INTEGER NOT NULL DEFAULT 0`,
@@ -194,6 +195,11 @@ const COLUMN_MIGRATIONS = [
   `ALTER TABLE campaigns ADD COLUMN total_skipped_below_score INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE campaigns ADD COLUMN total_skipped_has_website INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE settings ADD COLUMN market TEXT NOT NULL DEFAULT 'Georgia'`,
+  // Performance indexes
+  `CREATE INDEX IF NOT EXISTS leads_city_lc_idx ON leads (lower(city))`,
+  `CREATE INDEX IF NOT EXISTS leads_category_lc_idx ON leads (lower(category))`,
+  `CREATE INDEX IF NOT EXISTS leads_updated_at_idx ON leads (updated_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS lead_analyses_score_idx ON lead_analyses (lead_score DESC)`,
 ];
 
 function runMigrations(db: SQLiteDB): void {

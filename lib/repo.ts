@@ -48,6 +48,7 @@ export interface LeadFilters {
   minScore?: number | null;
   q?: string | null;
   market?: import("@/types").Market | null;
+  limit?: number;
 }
 
 export type LeadWithAnalysis = Lead & { analysis: LeadAnalysis | null };
@@ -148,7 +149,8 @@ export async function listLeadsWithAnalysis(
           ? (l.analysis?.lead_score ?? -1) >= filters.minScore
           : true,
       );
-    return sortLeads(rows);
+    const limit = filters.limit ?? 120;
+    return sortLeads(rows).slice(0, limit);
   }
 
   let query = db().from("leads").select("*");

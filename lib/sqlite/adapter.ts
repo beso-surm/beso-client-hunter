@@ -182,11 +182,11 @@ function buildLeadQuery(filters: LeadFilters) {
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-  return { where, params };
+  return { where, params, limit: filters.limit ?? 120 };
 }
 
 export function listLeadsWithAnalysis(filters: LeadFilters): LeadWithAnalysis[] {
-  const { where, params } = buildLeadQuery(filters);
+  const { where, params, limit } = buildLeadQuery(filters);
 
   const rows = db()
     .prepare(
@@ -204,7 +204,8 @@ export function listLeadsWithAnalysis(filters: LeadFilters): LeadWithAnalysis[] 
        FROM leads l
        LEFT JOIN lead_analyses a ON a.lead_id = l.id
        ${where}
-       ORDER BY coalesce(a.lead_score, -1) DESC, l.updated_at DESC`,
+       ORDER BY coalesce(a.lead_score, -1) DESC, l.updated_at DESC
+       LIMIT ${limit}`,
     )
     .all(...params) as Record<string, unknown>[];
 
@@ -585,19 +586,25 @@ export function saveSettings(
 // ---------------------------------------------------------------------------
 
 export function getStats(): DashboardStats {
-  const leads = listLeadsWithAnalysis({});
-  const count = (s: string) => leads.filter((l) => l.status === s).length;
+  const d = db();
+  const statusRows = d
+    .prepare("SELECT status, COUNT(*) as cnt FROM leads GROUP BY status")
+    .all() as { status: string; cnt: number }[];
+  const m: Record<string, number> = {};
+  let total = 0;
+  for (const r of statusRows) { m[r.status] = r.cnt; total += r.cnt; }
+  const { cnt: highValue } = d
+    .prepare("SELECT COUNT(*) as cnt FROM lead_analyses WHERE lead_score >= ?")
+    .get(HIGH_VALUE_THRESHOLD) as { cnt: number };
   return {
-    total: leads.length,
-    ready: count("ready"),
-    approved: count("approved"),
-    contacted: count("contacted"),
-    replied: count("replied"),
-    not_interested: count("not_interested"),
-    potential_client: count("potential_client"),
-    won: count("won"),
-    highValue: leads.filter(
-      (l) => (l.analysis?.lead_score ?? 0) >= HIGH_VALUE_THRESHOLD,
-    ).length,
+    total,
+    ready: m.ready ?? 0,
+    approved: m.approved ?? 0,
+    contacted: m.contacted ?? 0,
+    replied: m.replied ?? 0,
+    not_interested: m.not_interested ?? 0,
+    potential_client: m.potential_client ?? 0,
+    won: m.won ?? 0,
+    highValue,
   };
 }

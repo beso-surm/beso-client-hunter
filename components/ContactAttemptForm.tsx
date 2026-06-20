@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { UserX } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -29,12 +29,17 @@ const OUTCOMES: { value: ContactOutcome; label: string }[] = [
 
 export function ContactAttemptForm({ leadId }: { leadId: string }) {
   const router = useRouter();
+  const [, startTransition] = useTransition();
   const [channel, setChannel] = useState<ContactChannel>("phone");
   const [outcome, setOutcome] = useState<ContactOutcome | "">("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [quickLoading, setQuickLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function refresh() {
+    startTransition(() => router.refresh());
+  }
 
   async function submit() {
     setLoading(true);
@@ -52,7 +57,7 @@ export function ContactAttemptForm({ leadId }: { leadId: string }) {
     }
     setNote("");
     setOutcome("");
-    router.refresh();
+    refresh();
   }
 
   async function logNoSocials() {
@@ -68,7 +73,7 @@ export function ContactAttemptForm({ leadId }: { leadId: string }) {
       setError(res.error);
       return;
     }
-    router.refresh();
+    refresh();
   }
 
   return (
