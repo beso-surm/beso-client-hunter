@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Label, Select, Input, FieldError } from "@/components/ui/Field";
 import { Spinner } from "@/components/ui/Spinner";
-import { CITIES, US_CITIES, CATEGORIES, MARKETS, type Market } from "@/lib/constants";
+import { CITIES, US_CITIES, CAMPAIGN_CATEGORIES, MARKETS, type Market } from "@/lib/constants";
 import { runAgentAction } from "@/app/actions/agent";
 import { cn } from "@/lib/utils";
 import type { AgentRunSummary } from "@/types";
@@ -25,7 +25,9 @@ export function RunAgentForm({
   const [market, setMarket] = useState<Market>(defaultMarket);
   const cityList = market === "USA" ? US_CITIES : CITIES;
   const [city, setCity] = useState(defaultCity ?? cityList[0]);
-  const [category, setCategory] = useState(defaultCategory ?? CATEGORIES[0]);
+  const [categories, setCategories] = useState<string[]>(
+    defaultCategory ? [defaultCategory] : [...CAMPAIGN_CATEGORIES],
+  );
   const [maxResults, setMaxResults] = useState(8);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,15 +35,20 @@ export function RunAgentForm({
 
   function switchMarket(m: Market) {
     setMarket(m);
-    const list = m === "USA" ? US_CITIES : CITIES;
-    setCity(list[0]);
+    setCity((m === "USA" ? US_CITIES : CITIES)[0]);
+  }
+
+  function toggleCategory(cat: string) {
+    setCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
+    );
   }
 
   async function run() {
     setLoading(true);
     setError(null);
     setSummary(null);
-    const res = await runAgentAction({ city, category, maxResults });
+    const res = await runAgentAction({ city, categories, maxResults });
     setLoading(false);
     if (!res.ok) {
       setError(res.error);
@@ -85,6 +92,8 @@ export function RunAgentForm({
     );
   }
 
+  const estimatedLeads = categories.length * maxResults;
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-500">
@@ -115,6 +124,7 @@ export function RunAgentForm({
         </div>
       </div>
 
+      {/* City + Max results */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor="agent-city">City</Label>
@@ -131,39 +141,82 @@ export function RunAgentForm({
           </Select>
         </div>
         <div>
-          <Label htmlFor="agent-category">Category</Label>
-          <Select
-            id="agent-category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </Select>
+          <Label htmlFor="agent-max" hint="per category">
+            Max results
+          </Label>
+          <Input
+            id="agent-max"
+            type="number"
+            min={1}
+            max={25}
+            value={maxResults}
+            onChange={(e) => setMaxResults(Number(e.target.value))}
+          />
         </div>
       </div>
 
+      {/* Categories — multi-select chips */}
       <div>
-        <Label htmlFor="agent-max" hint="1–25">
-          Max results
-        </Label>
-        <Input
-          id="agent-max"
-          type="number"
-          min={1}
-          max={25}
-          value={maxResults}
-          onChange={(e) => setMaxResults(Number(e.target.value))}
-        />
+        <div className="mb-2 flex items-center justify-between">
+          <Label>
+            Categories{" "}
+            <span className="font-normal text-slate-400">
+              ({categories.length} selected)
+            </span>
+          </Label>
+          <div className="flex gap-3 text-xs">
+            <button
+              type="button"
+              onClick={() => setCategories([...CAMPAIGN_CATEGORIES])}
+              className="text-indigo-600 hover:underline"
+            >
+              All
+            </button>
+            <span className="text-slate-300">·</span>
+            <button
+              type="button"
+              onClick={() => setCategories([])}
+              className="text-slate-400 hover:underline"
+            >
+              None
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {CAMPAIGN_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => toggleCategory(cat)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-sm transition-colors",
+                categories.includes(cat)
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-300 bg-white text-slate-600 hover:border-slate-400",
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {categories.length > 1 && (
+        <p className="text-xs text-slate-500">
+          {categories.length} categories × {maxResults} = up to{" "}
+          <span className="font-semibold text-slate-700">{estimatedLeads}</span>{" "}
+          leads searched. Runs sequentially — may take a couple of minutes.
+        </p>
+      )}
 
       <FieldError>{error}</FieldError>
 
       <div className="flex justify-end">
-        <Button onClick={run} disabled={loading} variant="secondary">
+        <Button
+          onClick={run}
+          disabled={loading || categories.length === 0}
+          variant="secondary"
+        >
           {loading ? (
             <>
               <Spinner /> Running agent…

@@ -14,13 +14,35 @@ export async function runAgentAction(
     return fail(parsed.error.issues.map((i) => i.message).join(", "));
   }
   try {
-    const summary = await runClientHunterAgent({
-      city: parsed.data.city,
-      category: parsed.data.category,
-      maxResults: parsed.data.maxResults,
-    });
+    const { city, categories, maxResults } = parsed.data;
+
+    const aggregated: AgentRunSummary = {
+      runId: "",
+      totalFound: 0,
+      saved: 0,
+      skippedDuplicates: 0,
+      skippedBelowScore: 0,
+      skippedHasWebsite: 0,
+      highValueLeads: 0,
+      errors: [],
+      leadIds: [],
+    };
+
+    for (const category of categories) {
+      const summary = await runClientHunterAgent({ city, category, maxResults });
+      aggregated.runId = summary.runId;
+      aggregated.totalFound += summary.totalFound;
+      aggregated.saved += summary.saved;
+      aggregated.skippedDuplicates += summary.skippedDuplicates;
+      aggregated.skippedBelowScore += summary.skippedBelowScore;
+      aggregated.skippedHasWebsite += summary.skippedHasWebsite;
+      aggregated.highValueLeads += summary.highValueLeads;
+      aggregated.errors.push(...summary.errors);
+      aggregated.leadIds.push(...summary.leadIds);
+    }
+
     revalidatePath("/dashboard");
-    return ok(summary);
+    return ok(aggregated);
   } catch (err) {
     return fail(err instanceof Error ? err.message : "Agent run failed");
   }

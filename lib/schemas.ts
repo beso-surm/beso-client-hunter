@@ -91,7 +91,9 @@ export const updateStatusSchema = z.object({
 
 export const runAgentSchema = z.object({
   city: z.string().trim().min(1, "Pick a city"),
-  category: z.string().trim().min(1, "Pick a category"),
+  categories: z
+    .array(z.string().trim().min(1))
+    .min(1, "Pick at least one category"),
   maxResults: z.coerce.number().int().min(1).max(25).default(8),
 });
 

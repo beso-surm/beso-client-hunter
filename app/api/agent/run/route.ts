@@ -8,8 +8,9 @@ export const maxDuration = 120;
 
 /**
  * POST /api/agent/run
- * Body: { city: string, category: string, maxResults?: number }
- * Runs the Client Hunter agent and returns the run summary.
+ * Body: { city: string, categories: string[], maxResults?: number }
+ * Runs the Client Hunter agent across all selected categories and returns
+ * an aggregated run summary.
  */
 export async function POST(req: Request) {
   let body: unknown;
@@ -28,12 +29,38 @@ export async function POST(req: Request) {
   }
 
   try {
-    const summary = await runClientHunterAgent({
-      city: parsed.data.city,
-      category: parsed.data.category,
-      maxResults: parsed.data.maxResults,
-    });
-    return NextResponse.json(summary);
+    const { city, categories, maxResults } = parsed.data;
+    const results = await Promise.all(
+      categories.map((category) =>
+        runClientHunterAgent({ city, category, maxResults }),
+      ),
+    );
+    // Merge per-category summaries into one.
+    const merged = results.reduce(
+      (acc, r) => ({
+        runId: r.runId,
+        totalFound: acc.totalFound + r.totalFound,
+        saved: acc.saved + r.saved,
+        skippedDuplicates: acc.skippedDuplicates + r.skippedDuplicates,
+        skippedBelowScore: acc.skippedBelowScore + r.skippedBelowScore,
+        skippedHasWebsite: acc.skippedHasWebsite + r.skippedHasWebsite,
+        highValueLeads: acc.highValueLeads + r.highValueLeads,
+        errors: [...acc.errors, ...r.errors],
+        leadIds: [...acc.leadIds, ...r.leadIds],
+      }),
+      {
+        runId: "",
+        totalFound: 0,
+        saved: 0,
+        skippedDuplicates: 0,
+        skippedBelowScore: 0,
+        skippedHasWebsite: 0,
+        highValueLeads: 0,
+        errors: [] as string[],
+        leadIds: [] as string[],
+      },
+    );
+    return NextResponse.json(merged);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Agent run failed" },
