@@ -26,8 +26,11 @@ export function buildOutreachPrompt(input: OutreachInput): {
 } {
   const { settings, language } = input;
 
+  const locationCtx = settings.market === "USA" ? "serving US local businesses" : "based in Georgia";
+  const cityFallback = settings.market === "USA" ? "the US" : "Georgia";
+
   const system = [
-    `You write first-contact outreach messages for ${settings.my_name}, a web developer in Georgia.`,
+    `You write first-contact outreach messages for ${settings.my_name}, a freelance web developer ${locationCtx}.`,
     `Write in ${languageName(language)}. Tone: ${toneName(settings)}.`,
     "",
     "Hard rules:",
@@ -49,7 +52,7 @@ export function buildOutreachPrompt(input: OutreachInput): {
   const user = [
     "Write the outreach message for this prospect.",
     "",
-    `Business: ${input.businessName} (${input.category ?? "business"}, ${input.city ?? "Georgia"})`,
+    `Business: ${input.businessName} (${input.category ?? "business"}, ${input.city ?? cityFallback})`,
     `Best angle to lead with: ${input.analysis.best_outreach_angle}`,
     `Why they need a website: ${input.analysis.why_they_need_website}`,
     `Their main problems: ${input.analysis.problems_found.join("; ")}`,
@@ -75,8 +78,11 @@ export function buildFollowUpPrompt(input: FollowUpInput): {
 } {
   const { settings, language } = input;
 
+  const locationCtxFu = settings.market === "USA" ? "serving US local businesses" : "based in Georgia";
+  const cityFallbackFu = settings.market === "USA" ? "the US" : "Georgia";
+
   const system = [
-    `You write polite follow-up messages for ${settings.my_name}, a web developer in Georgia.`,
+    `You write polite follow-up messages for ${settings.my_name}, a freelance web developer ${locationCtxFu}.`,
     `Write in ${languageName(language)}. Tone: ${toneName(settings)}.`,
     "",
     "Hard rules:",
@@ -92,7 +98,7 @@ export function buildFollowUpPrompt(input: FollowUpInput): {
   const user = [
     "Write a follow-up message.",
     "",
-    `Business: ${input.businessName} (${input.category ?? "business"}, ${input.city ?? "Georgia"})`,
+    `Business: ${input.businessName} (${input.category ?? "business"}, ${input.city ?? cityFallbackFu})`,
     "",
     "The first message that received no reply was:",
     '"""',

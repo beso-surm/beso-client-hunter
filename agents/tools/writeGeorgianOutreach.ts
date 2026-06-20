@@ -93,14 +93,18 @@ function templateOutreach(
     ].join("\n");
   }
 
+  const formNote = settings.market === "USA"
+    ? "with prices, photos and a contact/booking form"
+    : "with prices, photos and a contact/booking form (KA/EN/RU)";
+
   return [
     `Hi! 👋 I came across ${name}${city ? ` in ${city}` : ""}.`,
     "",
     "I noticed you're hard to find online — most customers search on Google first, and without a modern website you're losing some of them.",
     "",
-    `I build fast, mobile-friendly websites for ${cat} businesses — with prices, photos and a contact/booking form (KA/EN/RU).`,
+    `I build fast, mobile-friendly websites for ${cat} businesses — ${formNote}.`,
     "",
-    "If you're interested, I'd happily show you an example and give you a quick price.",
+    "If you're interested, I'd happily show you an example and give you a quick quote.",
     "",
     "Best regards,",
     sign,

@@ -4,7 +4,32 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Input, Select } from "@/components/ui/Field";
-import { CITIES, CATEGORIES, LEAD_STATUSES } from "@/lib/constants";
+import {
+  CITIES,
+  CAMPAIGN_CITIES,
+  US_CITIES,
+  US_CAMPAIGN_CITIES,
+  CAMPAIGN_CATEGORIES,
+  LEAD_STATUSES,
+} from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import type { Market } from "@/types";
+
+const GEORGIA_CITIES = [...new Set([...CITIES, ...CAMPAIGN_CITIES])].sort();
+const USA_CITIES_LIST = [...new Set([...US_CITIES, ...US_CAMPAIGN_CITIES])].sort();
+const ALL_CITIES = [...new Set([...GEORGIA_CITIES, ...USA_CITIES_LIST])].sort();
+
+const MARKETS: { value: "" | Market; label: string }[] = [
+  { value: "", label: "All markets" },
+  { value: "Georgia", label: "Georgia" },
+  { value: "USA", label: "United States" },
+];
+
+function cityListFor(market: "" | Market) {
+  if (market === "USA") return USA_CITIES_LIST;
+  if (market === "Georgia") return GEORGIA_CITIES;
+  return ALL_CITIES;
+}
 
 export function LeadFilters() {
   const router = useRouter();
@@ -14,7 +39,6 @@ export function LeadFilters() {
   const [q, setQ] = useState(sp.get("q") ?? "");
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Keep the text box in sync if the URL changes elsewhere (e.g. Clear).
   useEffect(() => {
     setQ(sp.get("q") ?? "");
   }, [sp]);
@@ -36,18 +60,50 @@ export function LeadFilters() {
     debounce.current = setTimeout(() => setParam("q", value), 300);
   }
 
-  const hasFilters = ["q", "city", "category", "status", "minScore"].some((k) =>
-    sp.get(k),
+  function selectMarket(value: "" | Market) {
+    pushParams((p) => {
+      if (value) p.set("market", value);
+      else p.delete("market");
+      // clear city since options change per market
+      p.delete("city");
+    });
+  }
+
+  const currentMarket = (sp.get("market") ?? "") as "" | Market;
+  const cities = cityListFor(currentMarket);
+
+  const hasFilters = ["q", "city", "category", "status", "minScore", "market"].some(
+    (k) => sp.get(k),
   );
 
   return (
-    <Card className="p-3">
+    <Card className="p-3 space-y-3">
+      {/* Market toggle */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-slate-500">Market:</span>
+        {MARKETS.map((m) => (
+          <button
+            key={m.value}
+            type="button"
+            onClick={() => selectMarket(m.value)}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              currentMarket === m.value
+                ? "border-indigo-600 bg-indigo-600 text-white"
+                : "border-slate-200 bg-white text-slate-500 hover:border-indigo-300 hover:text-indigo-600",
+            )}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Filter row */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
         <Input
           placeholder="Search business name…"
           value={q}
           onChange={(e) => onSearch(e.target.value)}
-          className="lg:col-span-1"
         />
         <Select
           value={sp.get("city") ?? ""}
@@ -55,7 +111,7 @@ export function LeadFilters() {
           aria-label="Filter by city"
         >
           <option value="">All cities</option>
-          {CITIES.map((c) => (
+          {cities.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
@@ -67,7 +123,7 @@ export function LeadFilters() {
           aria-label="Filter by category"
         >
           <option value="">All categories</option>
-          {CATEGORIES.map((c) => (
+          {CAMPAIGN_CATEGORIES.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
@@ -96,8 +152,8 @@ export function LeadFilters() {
         </Select>
       </div>
 
-      {hasFilters ? (
-        <div className="mt-2 flex justify-end">
+      {hasFilters && (
+        <div className="flex justify-end">
           <button
             onClick={() => router.push(pathname)}
             className="text-xs font-medium text-slate-500 hover:text-slate-800"
@@ -105,7 +161,7 @@ export function LeadFilters() {
             Clear filters
           </button>
         </div>
-      ) : null}
+      )}
     </Card>
   );
 }

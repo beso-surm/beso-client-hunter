@@ -32,6 +32,16 @@ export function CampaignRunner({ campaign }: Props) {
     { found: 0, saved: 0, skipped_duplicate: 0, skipped_below_score: 0, skipped_has_website: 0, high_value: 0 },
   );
 
+  // If all pairs were already done when we mounted (e.g. page reload after run),
+  // the main effect exits early (done=true) and never calls finalize().
+  // This one-time effect catches that case and marks the campaign complete.
+  useEffect(() => {
+    if (initialIdx >= campaign.total_pairs && campaign.status !== "completed") {
+      completeCampaignAction(campaign.id).then(() => router.refresh());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (done || runningRef.current) return;
     if (currentIdx >= campaign.pairs.length) {

@@ -14,7 +14,7 @@ import { DashboardActions } from "@/components/DashboardActions";
 import { RecentRuns } from "@/components/RecentRuns";
 import { ExportMenu } from "@/components/ExportMenu";
 import { EmptyState } from "@/components/ui/EmptyState";
-import type { LeadStatus } from "@/types";
+import type { LeadStatus, Market } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +36,11 @@ export default async function DashboardPage({
     ? (statusParam as LeadStatus)
     : null;
   const minScoreParam = one(sp.minScore);
+  const marketParam = one(sp.market);
+  const validMarket =
+    marketParam === "Georgia" || marketParam === "USA"
+      ? (marketParam as Market)
+      : null;
 
   const filters: LeadFilters = {
     q: one(sp.q) ?? null,
@@ -43,6 +48,7 @@ export default async function DashboardPage({
     category: one(sp.category) ?? null,
     status: validStatus,
     minScore: minScoreParam ? Number(minScoreParam) : null,
+    market: validMarket,
   };
 
   const [leads, stats, runs, settings] = await Promise.all([
@@ -57,7 +63,8 @@ export default async function DashboardPage({
       filters.city ||
       filters.category ||
       filters.status ||
-      filters.minScore,
+      filters.minScore ||
+      filters.market,
   );
 
   const leadsQuery = new URLSearchParams(
@@ -66,6 +73,7 @@ export default async function DashboardPage({
         status: filters.status,
         city: filters.city,
         category: filters.category,
+        market: filters.market,
       }).filter(([, v]) => v != null) as [string, string][],
     ),
   ).toString();

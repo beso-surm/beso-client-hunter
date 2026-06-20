@@ -6,7 +6,7 @@
 import "server-only";
 import { getDb } from "@/lib/sqlite/db";
 import { normalizeName, nowISO, uuid } from "@/lib/utils";
-import { HIGH_VALUE_THRESHOLD, FIXED_SETTINGS_ID } from "@/lib/constants";
+import { HIGH_VALUE_THRESHOLD, FIXED_SETTINGS_ID, CITIES, CAMPAIGN_CITIES, US_CITIES, US_CAMPAIGN_CITIES } from "@/lib/constants";
 import type {
   AgentRun,
   AgentRunStatus,
@@ -149,6 +149,9 @@ function db() {
 // Leads
 // ---------------------------------------------------------------------------
 
+const GEORGIA_CITY_LIST = [...new Set([...CITIES, ...CAMPAIGN_CITIES])];
+const USA_CITY_LIST = [...new Set([...US_CITIES, ...US_CAMPAIGN_CITIES])];
+
 function buildLeadQuery(filters: LeadFilters) {
   const conditions: string[] = [];
   const params: (string | number)[] = [];
@@ -156,6 +159,11 @@ function buildLeadQuery(filters: LeadFilters) {
   if (filters.city) {
     conditions.push("lower(l.city) = lower(?)");
     params.push(filters.city);
+  } else if (filters.market) {
+    const cities = filters.market === "USA" ? USA_CITY_LIST : GEORGIA_CITY_LIST;
+    const placeholders = cities.map(() => "lower(?)").join(", ");
+    conditions.push(`lower(coalesce(l.city,'')) IN (${placeholders})`);
+    params.push(...cities);
   }
   if (filters.category) {
     conditions.push("lower(l.category) = lower(?)");

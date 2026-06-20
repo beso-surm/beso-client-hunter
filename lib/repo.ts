@@ -13,7 +13,7 @@ import { sqliteEnabled } from "@/lib/sqlite/db";
 import * as sq from "@/lib/sqlite/adapter";
 import * as sqc from "@/lib/sqlite/campaign-adapter";
 import type { Campaign, CampaignPair, CampaignWithPairs } from "@/types";
-import { FIXED_SETTINGS_ID, HIGH_VALUE_THRESHOLD } from "@/lib/constants";
+import { FIXED_SETTINGS_ID, HIGH_VALUE_THRESHOLD, CITIES, CAMPAIGN_CITIES, US_CITIES, US_CAMPAIGN_CITIES } from "@/lib/constants";
 import { normalizeName, nowISO, uuid } from "@/lib/utils";
 import type {
   AgentRun,
@@ -47,6 +47,7 @@ export interface LeadFilters {
   status?: LeadStatus | null;
   minScore?: number | null;
   q?: string | null;
+  market?: import("@/types").Market | null;
 }
 
 export type LeadWithAnalysis = Lead & { analysis: LeadAnalysis | null };
@@ -102,6 +103,13 @@ function db() {
 // Leads
 // ===========================================================================
 
+const GEORGIA_CITIES_SET = new Set(
+  [...CITIES, ...CAMPAIGN_CITIES].map((c) => c.toLowerCase()),
+);
+const USA_CITIES_SET = new Set(
+  [...US_CITIES, ...US_CAMPAIGN_CITIES].map((c) => c.toLowerCase()),
+);
+
 function matchesFilters(lead: Lead, f: LeadFilters): boolean {
   if (f.city && (lead.city ?? "").toLowerCase() !== f.city.toLowerCase())
     return false;
@@ -111,6 +119,11 @@ function matchesFilters(lead: Lead, f: LeadFilters): boolean {
   )
     return false;
   if (f.status && lead.status !== f.status) return false;
+  if (f.market && !f.city) {
+    const cityLc = (lead.city ?? "").toLowerCase();
+    const set = f.market === "USA" ? USA_CITIES_SET : GEORGIA_CITIES_SET;
+    if (!set.has(cityLc)) return false;
+  }
   if (f.q) {
     const q = f.q.toLowerCase();
     const hay = `${lead.business_name} ${lead.city ?? ""} ${lead.category ?? ""} ${lead.notes ?? ""}`.toLowerCase();
